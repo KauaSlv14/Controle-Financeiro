@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Target, Link, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,18 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
   const [productLink, setProductLink] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Update preview when imageUrl changes
+  useEffect(() => {
+    if (imageUrl) {
+      setPreviewUrl(imageUrl);
+    } else if (name) {
+      setPreviewUrl(`https://source.unsplash.com/400x300/?${encodeURIComponent(name)},product`);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [imageUrl, name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +56,7 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
       setTargetAmount("");
       setProductLink("");
       setImageUrl("");
+      setPreviewUrl(null);
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -63,6 +76,20 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Image Preview */}
+          {previewUrl && (
+            <div className="flex justify-center">
+              <div className="w-32 h-32 rounded-xl overflow-hidden bg-secondary border-2 border-primary/20 shadow-lg">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                  onError={() => setPreviewUrl(null)}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome do item</Label>

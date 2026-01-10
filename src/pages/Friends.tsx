@@ -1,17 +1,24 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { Users } from "lucide-react";
+import { FriendSearch } from "@/components/FriendSearch";
+import { FriendRequests } from "@/components/FriendRequests";
+import { FriendsList } from "@/components/FriendsList";
 
 export default function Friends() {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleFriendUpdate = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <AppLayout>
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
         <h1 className="font-display text-2xl font-bold">Amigos</h1>
-        <div className="text-center py-12">
-          <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
-            <Users className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <p className="text-muted-foreground">Em breve você poderá adicionar amigos e acompanhar o progresso deles!</p>
-        </div>
+        
+        <FriendSearch />
+        <FriendRequests onUpdate={handleFriendUpdate} />
+        <FriendsList refreshTrigger={refreshTrigger} />
       </div>
     </AppLayout>
   );

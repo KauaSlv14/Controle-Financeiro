@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PiggyBank, Loader2 } from "lucide-react";
+import { PiggyBank, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+type AuthMode = "login" | "signup" | "forgot";
+
 export default function Auth() {
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -32,25 +34,59 @@ export default function Auth() {
     e.preventDefault();
     setSubmitting(true);
 
-    const { error } = isLogin 
-      ? await signIn(email, password)
-      : await signUp(email, password);
+    if (mode === "forgot") {
+      const { error } = await resetPassword(email);
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Email enviado!",
+          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+        });
+        setMode("login");
+        setEmail("");
+      }
+    } else {
+      const { error } = mode === "login"
+        ? await signIn(email, password)
+        : await signUp(email, password);
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error.message.includes("Invalid login") 
-          ? "Email ou senha incorretos" 
-          : error.message.includes("already registered")
-          ? "Este email já está cadastrado"
-          : error.message,
-      });
-    } else if (!isLogin) {
-      toast({ title: "Conta criada!", description: "Bem-vindo ao Cofrinho!" });
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: error.message.includes("Invalid login")
+            ? "Email ou senha incorretos"
+            : error.message.includes("already registered")
+            ? "Este email já está cadastrado"
+            : error.message,
+        });
+      } else if (mode === "signup") {
+        toast({ title: "Conta criada!", description: "Bem-vindo ao Cofrinho!" });
+      }
     }
 
     setSubmitting(false);
+  };
+
+  const getTitle = () => {
+    switch (mode) {
+      case "login": return "Entrar no Cofrinho";
+      case "signup": return "Criar Conta";
+      case "forgot": return "Recuperar Senha";
+    }
+  };
+
+  const getButtonText = () => {
+    switch (mode) {
+      case "login": return "Entrar";
+      case "signup": return "Criar Conta";
+      case "forgot": return "Enviar Email";
+    }
   };
 
   return (
@@ -61,7 +97,7 @@ export default function Auth() {
             <PiggyBank className="h-8 w-8 text-primary-foreground" />
           </div>
           <CardTitle className="font-display text-2xl">
-            {isLogin ? "Entrar no Cofrinho" : "Criar Conta"}
+            {getTitle()}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -77,28 +113,54 @@ export default function Auth() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={6}
-                required
-              />
-            </div>
+            {mode !== "forgot" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+              </div>
+            )}
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={() => setMode("forgot")}
+                className="text-sm text-primary hover:underline font-medium"
+              >
+                Esqueceu sua senha?
+              </button>
+            )}
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : isLogin ? "Entrar" : "Criar Conta"}
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : getButtonText()}
             </Button>
           </form>
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            {isLogin ? "Não tem conta?" : "Já tem conta?"}{" "}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline font-medium">
-              {isLogin ? "Cadastre-se" : "Entre"}
-            </button>
-          </p>
+          <div className="text-center text-sm text-muted-foreground mt-4 space-y-2">
+            {mode === "forgot" ? (
+              <button
+                onClick={() => setMode("login")}
+                className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar para login
+              </button>
+            ) : (
+              <p>
+                {mode === "login" ? "Não tem conta?" : "Já tem conta?"}{" "}
+                <button
+                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {mode === "login" ? "Cadastre-se" : "Entre"}
+                </button>
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

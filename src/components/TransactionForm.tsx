@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowDown, ArrowUp, Banknote, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +33,22 @@ interface TransactionFormProps {
   }) => Promise<void>;
 }
 
-export function TransactionForm({ open, onOpenChange, type, goals, onSubmit }: TransactionFormProps) {
+export function TransactionForm({ open, onOpenChange, type, goals = [], onSubmit }: TransactionFormProps) {
   const [amount, setAmount] = useState("");
   const [source, setSource] = useState<'physical' | 'pix'>('pix');
   const [description, setDescription] = useState("");
-  const [goalId, setGoalId] = useState<string>("");
+  const [goalId, setGoalId] = useState<string>("no-goal");
   const [loading, setLoading] = useState(false);
+
+  // Reset form when opening
+  useEffect(() => {
+    if (open) {
+      setAmount("");
+      setDescription("");
+      setGoalId("no-goal");
+      setSource('pix');
+    }
+  }, [open]);
 
   const isIncome = type === 'income';
 
@@ -52,11 +62,8 @@ export function TransactionForm({ open, onOpenChange, type, goals, onSubmit }: T
         amount: parseFloat(amount),
         source,
         description,
-        goalId: goalId || undefined,
+        goalId: goalId === "no-goal" ? undefined : goalId,
       });
-      setAmount("");
-      setDescription("");
-      setGoalId("");
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -167,7 +174,7 @@ export function TransactionForm({ open, onOpenChange, type, goals, onSubmit }: T
           </div>
 
           {/* Link to Goal (for income) */}
-          {isIncome && goals && goals.length > 0 && (
+          {isIncome && (
             <div className="space-y-2">
               <Label htmlFor="goal">Vincular a uma meta (opcional)</Label>
               <Select value={goalId} onValueChange={setGoalId}>
@@ -175,11 +182,13 @@ export function TransactionForm({ open, onOpenChange, type, goals, onSubmit }: T
                   <SelectValue placeholder="Selecione uma meta" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma meta</SelectItem>
-                  {goals.filter(g => !g.is_completed).map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id}>
-                      {goal.name}
-                    </SelectItem>
+                  <SelectItem value="no-goal">Nenhuma meta</SelectItem>
+                  {goals && goals.map((goal) => (
+                    !goal.is_completed && (
+                      <SelectItem key={goal.id} value={goal.id}>
+                        {goal.name}
+                      </SelectItem>
+                    )
                   ))}
                 </SelectContent>
               </Select>

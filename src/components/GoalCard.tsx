@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { GoalDetails } from "./GoalDetails";
 
 interface GoalCardProps {
   goal: Goal;
@@ -21,7 +22,8 @@ interface GoalCardProps {
 export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationShown, setCelebrationShown] = useState(goal.is_completed);
-  
+  const [showDetails, setShowDetails] = useState(false);
+
   const percentage = Math.min((goal.current_amount / goal.target_amount) * 100, 100);
   const isCompleted = percentage >= 100;
 
@@ -44,8 +46,9 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
 
   return (
     <>
+      <GoalDetails goal={goal} open={showDetails} onOpenChange={setShowDetails} />
       <Confetti isActive={showCelebration} onComplete={() => setShowCelebration(false)} />
-      
+
       <Dialog open={showCelebration} onOpenChange={setShowCelebration}>
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
@@ -72,13 +75,15 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         </DialogContent>
       </Dialog>
 
-      <Card className={cn(
-        "group overflow-hidden transition-all duration-300 hover:shadow-lg",
-        isCompleted && "ring-2 ring-success/50 shadow-glow"
-      )}>
+      <Card
+        className={cn(
+          "group overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer",
+          isCompleted && "ring-2 ring-success/50 shadow-glow"
+        )}
+        onClick={() => setShowDetails(true)}
+      >
         <CardContent className="p-0">
           <div className="flex gap-4 p-4">
-            {/* Product Image */}
             {/* Product Image */}
             <div className="w-20 h-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center">
               <img
@@ -89,19 +94,16 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                   const target = e.target as HTMLImageElement;
                   // If it's already the default image, show a placeholder icon by hiding the image and letting the parent div show background
                   if (target.src.includes('unsplash')) {
-                     target.style.display = 'none';
-                     target.parentElement?.classList.add('bg-muted');
-                     // Create a text node or icon if needed, but for now fallback to bg
-                     // We can insert an icon into the parent if the image is hidden? 
-                     // Actually, easier to swap src to a local placeholder or just hide it.
+                    target.style.display = 'none';
+                    target.parentElement?.classList.add('bg-muted');
                   } else {
-                     target.src = getDefaultImage(goal.name);
+                    target.src = getDefaultImage(goal.name);
                   }
                 }}
               />
               {/* Fallback Icon (visible when img is hidden) */}
               <Target className="absolute w-8 h-8 text-muted-foreground opacity-0 img-error-fallback" />
-               <style>{`
+              <style>{`
                  img[style*="display: none"] + .img-error-fallback {
                    opacity: 1;
                    position: static;
@@ -121,6 +123,7 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <ExternalLink className="h-4 w-4" />
                   </a>
@@ -147,7 +150,10 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
                   </span>
                   {!isCompleted && onAddFunds && (
                     <button
-                      onClick={() => onAddFunds(goal.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddFunds(goal.id);
+                      }}
                       className="text-xs text-primary hover:underline"
                     >
                       Adicionar fundos

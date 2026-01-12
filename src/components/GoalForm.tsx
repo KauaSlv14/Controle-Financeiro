@@ -79,13 +79,37 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
           {/* Image Preview */}
           {previewUrl && (
             <div className="flex justify-center">
-              <div className="w-32 h-32 rounded-xl overflow-hidden bg-secondary border-2 border-primary/20 shadow-lg">
+              <div className="w-32 h-32 rounded-xl overflow-hidden bg-secondary border-2 border-primary/20 shadow-lg flex items-center justify-center relative">
                 <img
                   src={previewUrl}
                   alt="Preview"
                   className="w-full h-full object-cover"
-                  onError={() => setPreviewUrl(null)}
+                  onError={() => {
+                    // Don't set null, just let it fail visually or show fallback
+                    // setPreviewUrl(null); 
+                    // Note: We can't easily change the state here to a "fallback" URL without endless loops if that fails too.
+                    // Better to handle the visual error state.
+                    const img = document.querySelector('#preview-img') as HTMLImageElement;
+                    if (img) img.style.display = 'none';
+                  }}
+                  id="preview-img"
+                  onLoad={() => {
+                    const img = document.querySelector('#preview-img') as HTMLImageElement;
+                    if (img) img.style.display = 'block';
+                  }}
                 />
+                {/* Fallback for preview */}
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground p-4 text-center text-xs"
+                  style={{ zIndex: 0 }}>
+                  <div className="flex flex-col items-center gap-2">
+                    <ImageIcon className="w-8 h-8 opacity-50" />
+                    <span>Preview indisponível</span>
+                  </div>
+                </div>
+                {/* Ensure image covers the fallback if it loads */}
+                <style>{`
+                    #preview-img { z-index: 1; position: relative; background: var(--background); }
+                 `}</style>
               </div>
             </div>
           )}

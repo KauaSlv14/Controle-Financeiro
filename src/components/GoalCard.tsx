@@ -79,15 +79,34 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
         <CardContent className="p-0">
           <div className="flex gap-4 p-4">
             {/* Product Image */}
-            <div className="w-20 h-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+            {/* Product Image */}
+            <div className="w-20 h-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center">
               <img
                 src={goal.image_url || getDefaultImage(goal.name)}
                 alt={goal.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = getDefaultImage(goal.name);
+                  const target = e.target as HTMLImageElement;
+                  // If it's already the default image, show a placeholder icon by hiding the image and letting the parent div show background
+                  if (target.src.includes('unsplash')) {
+                     target.style.display = 'none';
+                     target.parentElement?.classList.add('bg-muted');
+                     // Create a text node or icon if needed, but for now fallback to bg
+                     // We can insert an icon into the parent if the image is hidden? 
+                     // Actually, easier to swap src to a local placeholder or just hide it.
+                  } else {
+                     target.src = getDefaultImage(goal.name);
+                  }
                 }}
               />
+              {/* Fallback Icon (visible when img is hidden) */}
+              <Target className="absolute w-8 h-8 text-muted-foreground opacity-0 img-error-fallback" />
+               <style>{`
+                 img[style*="display: none"] + .img-error-fallback {
+                   opacity: 1;
+                   position: static;
+                 }
+               `}</style>
             </div>
 
             {/* Goal Info */}

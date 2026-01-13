@@ -44,7 +44,7 @@ export default function Goals() {
           {goals.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">Crie sua primeira meta para começar!</p>
           ) : (
-            goals.map((goal) => <GoalCard key={goal.id} goal={goal} />)
+            goals.map((goal) => <GoalCard key={goal.id} goal={goal} onGoalUpdated={fetchGoals} />)
           )}
         </div>
         <GoalForm open={showGoalForm} onOpenChange={setShowGoalForm} onSubmit={handleCreateGoal} />

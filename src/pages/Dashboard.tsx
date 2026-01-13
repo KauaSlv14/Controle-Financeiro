@@ -51,17 +51,17 @@ export default function Dashboard() {
     }
 
     const field = data.source === 'pix' ? 'pix_amount' : 'physical_amount';
-    const newAmount = type === 'income' 
-      ? (balance?.[field] || 0) + data.amount 
+    const newAmount = type === 'income'
+      ? (balance?.[field] || 0) + data.amount
       : (balance?.[field] || 0) - data.amount;
 
     await supabase.from("balances").update({ [field]: newAmount }).eq("user_id", user!.id);
-    
+
     if (data.goalId && type === 'income') {
       const goal = goals.find(g => g.id === data.goalId);
       if (goal) {
         const newGoalAmount = goal.current_amount + data.amount;
-        await supabase.from("goals").update({ 
+        await supabase.from("goals").update({
           current_amount: newGoalAmount,
           is_completed: newGoalAmount >= goal.target_amount,
           completed_at: newGoalAmount >= goal.target_amount ? new Date().toISOString() : null
@@ -95,7 +95,7 @@ export default function Dashboard() {
     <AppLayout>
       <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
         <h1 className="font-display text-2xl font-bold">Olá! 👋</h1>
-        
+
         <BalanceCard physicalAmount={balance?.physical_amount || 0} pixAmount={balance?.pix_amount || 0} />
 
         <div className="flex gap-3">
@@ -118,7 +118,7 @@ export default function Dashboard() {
           {goals.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">Crie sua primeira meta!</p>
           ) : (
-            goals.slice(0, 3).map((goal) => <GoalCard key={goal.id} goal={goal} />)
+            goals.slice(0, 3).map((goal) => <GoalCard key={goal.id} goal={goal} onGoalUpdated={fetchData} />)
           )}
         </div>
 

@@ -17,9 +17,10 @@ import { GoalDetails } from "./GoalDetails";
 interface GoalCardProps {
   goal: Goal;
   onAddFunds?: (goalId: string) => void;
+  onGoalUpdated?: () => void;
 }
 
-export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
+export function GoalCard({ goal, onAddFunds, onGoalUpdated }: GoalCardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationShown, setCelebrationShown] = useState(goal.is_completed);
   const [showDetails, setShowDetails] = useState(false);
@@ -46,7 +47,12 @@ export function GoalCard({ goal, onAddFunds }: GoalCardProps) {
 
   return (
     <>
-      <GoalDetails goal={goal} open={showDetails} onOpenChange={setShowDetails} />
+      <GoalDetails
+        goal={goal}
+        open={showDetails}
+        onOpenChange={setShowDetails}
+        onGoalUpdated={onGoalUpdated}
+      />
       <Confetti isActive={showCelebration} onComplete={() => setShowCelebration(false)} />
 
       <Dialog open={showCelebration} onOpenChange={setShowCelebration}>

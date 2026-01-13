@@ -9,10 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Goal } from "@/types/database";
 
 interface GoalFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialData?: Goal;
   onSubmit: (data: {
     name: string;
     targetAmount: number;
@@ -21,13 +23,28 @@ interface GoalFormProps {
   }) => Promise<void>;
 }
 
-export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
+export function GoalForm({ open, onOpenChange, initialData, onSubmit }: GoalFormProps) {
   const [name, setName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
   const [productLink, setProductLink] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open && initialData) {
+      setName(initialData.name);
+      setTargetAmount(initialData.target_amount.toString());
+      setProductLink(initialData.product_link || "");
+      setImageUrl(initialData.image_url || "");
+    } else if (open && !initialData) {
+      // Reset form when opening in create mode
+      setName("");
+      setTargetAmount("");
+      setProductLink("");
+      setImageUrl("");
+    }
+  }, [open, initialData]);
 
   // Update preview when imageUrl changes
   useEffect(() => {
@@ -52,11 +69,13 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
         productLink: productLink || undefined,
         imageUrl: imageUrl || undefined,
       });
-      setName("");
-      setTargetAmount("");
-      setProductLink("");
-      setImageUrl("");
-      setPreviewUrl(null);
+      if (!initialData) {
+        setName("");
+        setTargetAmount("");
+        setProductLink("");
+        setImageUrl("");
+        setPreviewUrl(null);
+      }
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -71,7 +90,7 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
             <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
               <Target className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-display">Nova Meta</span>
+            <span className="font-display">{initialData ? "Editar Meta" : "Nova Meta"}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -182,7 +201,7 @@ export function GoalForm({ open, onOpenChange, onSubmit }: GoalFormProps) {
 
           {/* Submit */}
           <Button type="submit" className="w-full" disabled={loading || !name || !targetAmount}>
-            {loading ? "Criando..." : "Criar Meta"}
+            {loading ? "Salvando..." : (initialData ? "Salvar Alterações" : "Criar Meta")}
           </Button>
         </form>
       </DialogContent>
